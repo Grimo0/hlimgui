@@ -33,5 +33,5 @@ target_link_libraries(${TARGET_NAME}${TARGET_EXT} hl)
 ENDIF()
 
 add_custom_command(TARGET ${TARGET_NAME}${TARGET_EXT} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${TARGET_NAME}${TARGET_EXT}> ../..
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${TARGET_NAME}${TARGET_EXT}> ../../imgui
 )
