@@ -492,7 +492,7 @@ typedef ImGuiStyle = {
 };
 
 
-@:hlNative("hlimgui")
+@:hlNative("imgui/hlimgui")
 class ImGui
 {
 	public static inline var FLT_MAX = 3.402823466e+38;
@@ -644,6 +644,20 @@ class ImGui
 
     // Widgets: Text
     public static function text(text : String) {}
+    public static function shortcut(txt : String, shortcut : String) { 
+		text(txt); 
+		var availSize : ImVec2 = getContentRegionAvail();
+		var textSize : ImVec2 = calcTextSize(shortcut);
+		sameLine(availSize.x - textSize.x); 
+		textDisabled(shortcut); 
+	}
+    public static function shortcutColored(col : ExtDynamic<ImVec4>, txt : String, shortcut : String) { 
+		textColored(col, txt); 
+		var availSize : ImVec2 = getContentRegionAvail();
+		var textSize : ImVec2 = calcTextSize(shortcut);
+		sameLine(availSize.x - textSize.x); 
+		textDisabled(shortcut); 
+	}
     public static function textColored(col : ExtDynamic<ImVec4>, fmt : String) {}
     public static function textDisabled(text : String) {}
     public static function textWrapped(text : String) {}
@@ -669,6 +683,49 @@ class ImGui
     public static function endCombo() {}
     public static function combo(label : String, current_item : hl.Ref<Int>, items : hl.NativeArray<String>, popup_max_height_in_items : Int = -1) : Bool {return false;}
 	public static function combo2(label : String, current_item : hl.Ref<Int>, items_separated_by_zeros : String, popup_max_height_in_items : Int = -1) : Bool {return false;}
+	public static function comboWithArrow<T>(?label : String, current_item : Int, items : Array<T>, get_name : Int -> String, changed : Int -> Void) {
+		ImGui.pushID(label == null ? "###comboWithArrow" : label);
+		var style : ImGuiStyle = ImGui.getStyle();
+		var w = label != null ? ImGui.calcItemWidth() : ImGui.getWindowContentRegionWidth();
+		var spacing = style.ItemInnerSpacing.x;
+		ImGui.pushItemWidth(w - spacing * 2. - ImGui.getFrameHeight() * 2.);
+		if (ImGui.beginCombo("##combo", get_name(current_item), ImGuiComboFlags.NoArrowButton))
+		{
+			for (n in 0...items.length)
+			{
+				var isSelected = (n == current_item);
+				if (ImGui.selectable(get_name(n), isSelected)) {
+					current_item = n;
+					changed(n);
+				}
+				if (isSelected)
+					ImGui.setItemDefaultFocus();
+			}
+			ImGui.endCombo();
+		}
+		ImGui.popItemWidth();
+		ImGui.sameLine(0, spacing);
+		if (ImGui.arrowButton("##l", ImGuiDir.Left)) {
+			if (current_item == 0)
+				current_item = items.length - 1;
+			else
+				current_item = current_item - 1;
+			changed(current_item);
+		}
+		ImGui.sameLine(0, spacing);
+		if (ImGui.arrowButton("##r", ImGuiDir.Right)) {
+			if (current_item == items.length - 1)
+				current_item = 0;
+			else
+				current_item = current_item + 1;
+			changed(current_item);
+		}
+		if (label != null) {
+			ImGui.sameLine(0, spacing);
+			ImGui.text(label);
+		}
+		ImGui.popID();
+	}
 	
     // Widgets: Drags
     public static function dragFloat(label : String, v : hl.NativeArray<Single>, v_speed : Single = 1.0, v_min : Single = 0.0, v_max : Single = 0.0, format : String = "%.3f", power : Single = 1.0) : Bool {return false;}
